@@ -1,0 +1,35 @@
+name: Deploy Blazor WebAssembly to Github Pages
+
+on:
+  push:
+    branches:
+      - main # Ou sua branch escolhida
+      
+permissions:
+  contents: write # Permite gravar o conteúdo do repositório
+  pages: write # Permite escrever na branch de pages
+  id-token: write # Necessário para autenticação OIDC (segurança)
+  
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Publish with dotnet
+        run: dotnet publish --configuration Release --output build
+        
+      - name: Change base-tag in index.html from / to repo name
+        run: sed -i 's|<base href="/" />|<base href="/${{GITHUB_REPO_NAME}}/" />|g' build/wwwroot/index.html
+        env:
+          GITHUB_REPO_NAME: ${{ github.event.repository.name }}
+      - name: Commit wwwroot to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          BRANCH: gh-pages
+          FOLDER: build/wwwroot
