@@ -1,0 +1,52 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href=""><img src="images/screensound-logo.png"/></a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link disabled">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Artistas
+            </NavLink>
+            <div class="submenu">
+                <NavLink class="nav-link" href="Artistas">
+                    Catálogo de Artistas
+                </NavLink>
+            </div>
+            <div class="submenu">
+                <NavLink class="nav-link" href="CadastrarArtista">
+                    Cadastrar Artista
+                </NavLink>
+            </div>
+        </div>
+
+        <!--Novo menu de músicas-->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link disabled">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Músicas
+            </NavLink>
+            <div class="submenu">
+                <NavLink class="nav-link" href="Playlist">
+                    Playlist
+                </NavLink>
+            </div>
+        </div>
+
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

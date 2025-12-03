@@ -1,0 +1,60 @@
+﻿@page "/Artistas"
+@inject ArtistasAPI artistasAPI
+
+<h2>Catálogo de Artistas</h2>
+
+@if (artistasPorPagina is not null) // verifica se a coleção não é nula para poder percorrer ela e mostrar os cards
+{
+    <div class="grid">
+        @foreach (var artista in artistasPorPagina)
+        {
+            <CardArtista Artista="artista" /> // Atribui cada artista da coleção como atributo do componente criado
+        }
+    </div> 
+
+    <div class="pagination">
+        @for (int i = 1; i <= totalPaginas; i++)
+        {
+            int paginaAtual = i;
+            <button class="btn m-1" @onclick="() => PaginaMudou(paginaAtual)">@paginaAtual</button>
+        }
+    </div>
+}
+else
+{
+    // Enquanto artistas não forem carregador na coleção artistasPorPagina, mostra uma mensagem de carregamento
+    <div class="d-flex align-items-center">
+        <div class="spinner-border text-primary me-2" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <span>Carregando...</span>
+    </div>
+}
+
+@code {
+    private const int TamanhoPagina = 6; // Define o tamanho da página para paginação
+    private ICollection<ArtistaResponse>? artistas; // Propriedade para receber a lista de artistas
+    private ICollection<ArtistaResponse>? artistasPorPagina;
+    private int totalItens;
+    private int totalPaginas;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Método que carrega os dados assim que o componente é inicializado
+        artistas = await artistasAPI.GetArtistasAsync();
+        if (artistas is not null)
+        {
+            totalItens = artistas.Count;
+            totalPaginas = (int)Math.Ceiling((double)totalItens / TamanhoPagina); // é necessário certificar que não será decimal (int) e arredondar para cima (Math.Ceiling)
+            PaginaMudou(1);
+        }
+    }
+
+    private void PaginaMudou(int pagina)
+    {
+        // Método chamado quando a página for alterada
+        var skip = (pagina - 1) * TamanhoPagina;
+        artistasPorPagina = artistas!.Skip(skip).Take(TamanhoPagina).ToList();
+    }
+}

@@ -1,0 +1,86 @@
+﻿@using System.ComponentModel.DataAnnotations
+@page "/CadastrarArtista"
+@inject ArtistasAPI artistasAPI
+@inject NavigationManager navigationManager
+
+<h2>Cadastro de Artista</h2>
+
+<EditForm Model="@artista" OnValidSubmit="Cadastrar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label>Nome</label>
+        <InputText @bind-Value="artista.Nome" class="input"/>
+    </div>
+
+    <div class="form-group">
+        <label>Biografia</label>
+        <InputTextArea @bind-Value="artista.Biografia" class="input" Rows="4"/>
+    </div>
+
+    <div class="form-group">
+        <label>Foto de Perfil</label>
+        @if (!string.IsNullOrEmpty(fileImage))
+        {
+            // Caso o fileImage NÃO seja vazio ou nulo, exibe a imagem de preview, caso for, cria o input file para upload
+            <img src="@fileImage" class="img-preview"/>
+        }
+        <InputFile OnChange="UploadFile" accept="image/jpeg" />
+    </div>
+
+    <br />
+
+    <button type="submit" class="btn">Cadastrar</button>
+</EditForm>
+
+@code {
+    // Importa as Data Anottations para tornar campos do formulário obrigatórios e fazer outras validações
+    // Define a rota da página de cadastro como "/CadastrarArtista"
+    // Injeta o serviço ArtistasAPI para fazer chamadas à API
+    // Injeta o NavigationManager para fazer a navegação programática entre páginas (como o redirecionamento após fazer um cadastro)
+
+    private ArtistasFormModel artista = new(); // Objeto que representa o artista que está sendo preenchido no formulário e que será utilizado como parâmetro no EditForm
+    private string? fileImage; // Armazena o nome do arquivo da imagem do artista
+
+    private async Task Cadastrar()
+    {
+        /// Método chamado quando o formulário é submetido (OnValidSubmit))
+
+        var request = new ArtistaRequest( // Objeto de request que será enviado para a API, preenchido com os dados do formulário
+            artista.Nome!,
+            artista.Biografia!,
+            artista.FotoPerfil!);
+
+        await artistasAPI.AddArtistaAsync(request); // Chama o método do serviço para adicionar o artista armazenado no objeeto de request na API
+        navigationManager.NavigateTo("/Artistas"); // Após submeter o formulário, redireciona o usuário para a página de catálogo de artistas
+    }
+
+    private async Task UploadFile(InputFileChangeEventArgs e) // Evento chamado quando um arquivo é selecionado no input file
+    {
+        /// Método para fazer o upload da imagem do artista para a API
+
+        var file = e.File; // O evento contém algumas informações sobre o arquivo selecionado, como ele próprio
+        var format = "image/jpeg"; // Único formato aceito para upload da imagem
+        var resizedImage = await file.RequestImageFileAsync(format, 200, 200); // Rdimensiona a imagem para 200x200 pixels
+
+        using var stream = resizedImage.OpenReadStream(); // Abre um stream de leitura do arquivo redimensionado
+        using var memory = new MemoryStream(); // Cria um MemoryStream para armazenar os dados da imagem em memória volátil
+        await stream.CopyToAsync(memory); // Copia os dados do stream para a memória
+
+        var imageUpload = Convert.ToBase64String(memory.ToArray()); // Transforma o conteúdo da imagem em um array de bytes e depois converte em uma string Base64, que é um formato textual usado para representar dados binários, mas em texto
+        fileImage = $"data:{format};base64,{imageUpload}"; // Monta uma data URI, que é um formato especial para exibir dados binários diretamente dentro de um atributo HTML.
+        artista.FotoPerfil = imageUpload;
+    }
+
+    public class ArtistasFormModel
+    {
+        // Clase que representa o modelo do formulário que será utilizado para validar os dados de entrada antes de enviar para o banco da API
+        // As validações são aplicadas no formulário com o componente "<DataAnnotationsValidator />" dentro do EditForm
+        [Required(ErrorMessage = "O nome do artista é obrigatório.")] // ErroMessage aparece na tela quando o campo não é preenchido
+        public string? Nome { get; set; }
+        [Required(ErrorMessage = "A biografia do artista é obrigatório.")]
+        public string? Biografia { get; set; }
+        public string? FotoPerfil { get; set; }
+    }
+}

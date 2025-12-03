@@ -1,0 +1,25 @@
+﻿@inject IConfiguration Configuration
+
+<div class="card-artista">
+    <img src="@ImageServer/FotosPerfil/@Artista?.FotoPerfil" class="card-img"/>
+    <div class="card-body">
+        <h4>@Artista?.Nome</h4>
+        <p class="bio">@Artista?.Bio</p>
+        <a class="btn" href="/EditarArtista/@Artista?.Nome">Detalhes</a>
+    </div>
+</div>
+
+@code {
+    // Representa o card de cada artista. Recebe como parâmetro um único objeto, que é o artista response, pois ele já contém todas as informações necessárias para exibir o card.
+    [Parameter]
+    public ArtistaResponse Artista { get; set; } = null!;
+
+    public string ImageServer { get; set; } // Propriedade para armazenar o valor referente à localização da API que contém as imagens dos artistas
+
+    protected override Task OnInitializedAsync()
+    {
+        // Ao incializar, deve atribuir à propriedade ImageServer o valor da configuração do servidor presente no objeto Configuration injetado
+        ImageServer = Configuration["APIServer"]!;
+        return base.OnInitializedAsync();
+    }
+}
